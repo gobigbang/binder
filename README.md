@@ -1,6 +1,6 @@
 
 [![GoDoc](https://godoc.org/github.com/gobigbang/binder?status.svg)](https://godoc.org/github.com/gobigbang/binder)
-[![GitHub release](https://img.shields.io/github/release/gobigbang/binder.svg)](https://img.shields.io/github/release/gobigbang/binder.svg)
+[![GitHub release](https://img.shields.io/github/release/gobigbang/binder.svg?v0.0.2)](https://img.shields.io/github/release/gobigbang/binder.svg?v0.0.2)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/gobigbang/binder/master/LICENSE)
 
 # HTTP BINDER
@@ -199,3 +199,8 @@ Each supported type has the following methods:
 - `Must<Type>s("param", &destination)` - (for slices) parameter value is required to exist, binds it to given destination of that type i.e `MustInt64s(...)`.
 
 For certain slice types `BindWithDelimiter("param", &dest, ",")` supports splitting parameter values before type conversion is done. For example binding an integer slice from the URL `/api/search?id=1,2,3&id=1` will result in `[]int64{1,2,3,1}`.
+
+
+## License
+
+MIT License
