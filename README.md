@@ -1,6 +1,11 @@
+
+[![GoDoc](https://godoc.org/github.com/gobigbang/binder?status.svg)](https://godoc.org/github.com/gobigbang/binder)
+[![GitHub release](https://img.shields.io/github/release/gobigbang/binder.svg)](https://img.shields.io/github/release/gobigbang/binder.svg)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/gobigbang/binder/master/LICENSE)
+
 # HTTP BINDER
 
-**Golang net/http request binder!**
+**Golang net/http compatible request binder!**
 
 > This is a modified [Echo](https://github.com/labstack/echo) http [binder](https://github.com/labstack/echo/blob/fe2627778114fc774a1b10920e1cd55fdd97cf00/binder.go) to bind structs and maps from the net/http requests
 
@@ -12,6 +17,14 @@ Parsing request data is a crucial part of a web application, this process is usu
 - Request body
 
 This package provides different ways to "bind" request data to go types.
+
+
+# Installation
+To install Binder, use go get:
+
+```go
+go get github.com/gobigbang/binder
+```
 
 # Struct Tag Binding
 
