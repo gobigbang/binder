@@ -11,21 +11,27 @@ import (
 )
 
 type InnerStruct struct {
-	Test string `json:"test" xml:"test" form:"test" query:"test"`
+	Test string                 `json:"test" xml:"test" form:"test" query:"test"`
+	File *multipart.FileHeader  `json:"file" xml:"file" form:"file"`
+	Age  int                    `json:"age" xml:"age" form:"age"`
+	Map  map[string]interface{} `json:"map" xml:"map" form:"map"`
 }
 
 type TestStruct struct {
-	Name  string                `json:"name" xml:"name" form:"name" query:"name" path:"name"`
-	Age   int                   `json:"age" xml:"age" form:"age" query:"age"`
-	Email string                `json:"email" xml:"email" form:"email" query:"email"`
-	File  *multipart.FileHeader `json:"file" xml:"file" form:"file"`
-	Inner InnerStruct           `json:"inner" xml:"inner" form:"inner"`
+	Name        string                 `json:"name" xml:"name" form:"name" query:"name" path:"name"`
+	HeaderValue string                 `json:"header_value" xml:"header_value" form:"header_value" query:"header_value" header:"X-Header-Value"`
+	Age         int                    `json:"age" xml:"age" form:"age" query:"age"`
+	Email       string                 `json:"email" xml:"email" form:"email" query:"email"`
+	File        *multipart.FileHeader  `json:"file" xml:"file" form:"file"`
+	Inner       InnerStruct            `json:"inner" xml:"inner" form:"inner" query:"inner"`
+	Elements    []int                  `json:"elements" xml:"elements" form:"elements[]" query:"elements[]"`
+	Map         map[string]interface{} `json:"map" xml:"map" form:"map"`
 }
 
-func handler(b binder.Binder) http.HandlerFunc {
+func handler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := &TestStruct{}
-		if err := b.Bind(r, data); err != nil {
+		if err := binder.BindHttp(r, data); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -55,11 +61,9 @@ func handler(b binder.Binder) http.HandlerFunc {
 }
 
 func main() {
-	b := binder.NewBinder()
-
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", handler(b))
-	mux.HandleFunc("/{name}", handler(b))
+	mux.HandleFunc("/", handler())
+	mux.HandleFunc("/{name}", handler())
 
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
