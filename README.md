@@ -37,9 +37,10 @@ type User struct {
   ID string `query:"id"`
 }
 
+// bind this route to something like /user?id=abc
 func(w http.ResponseWriter, r *http.Request) {
     var user User
-    if err := binder.BindHttp(r, data); err != nil {
+    if err := binder.BindHttp(r, &user); err != nil {
         http.Error(w, err.Error(), http.StatusBadRequest)
         return
     }

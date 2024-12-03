@@ -21,6 +21,7 @@ type TestStruct struct {
 	Name        string                 `json:"name" xml:"name" form:"name" query:"name" path:"name"`
 	HeaderValue string                 `json:"header_value" xml:"header_value" form:"header_value" query:"header_value" header:"X-Header-Value"`
 	Age         int                    `json:"age" xml:"age" form:"age" query:"age"`
+	FloatNumber *float64               `json:"float_number" xml:"float_number" form:"float_number" query:"float_number"`
 	Email       string                 `json:"email" xml:"email" form:"email" query:"email"`
 	File        *multipart.FileHeader  `json:"file" xml:"file" form:"file"`
 	Inner       InnerStruct            `json:"inner" xml:"inner" form:"inner" query:"inner"`
