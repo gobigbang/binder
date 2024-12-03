@@ -7,6 +7,8 @@ import (
 	"net/url"
 )
 
+var DefaultHttpBinder *HttpBinder
+
 type HttpBindableRequest struct {
 	*http.Request
 }
@@ -66,30 +68,57 @@ func NewHttpBindableRequest(r *http.Request) HttpBindableRequest {
 
 // BindHttp binds an http.Request to a struct or map.
 func BindHttp(r *http.Request, i interface{}) error {
-	return Bind(NewHttpBindableRequest(r), i)
+	return GetHttpBinder().Bind(r, i)
 }
 
 // BindHttpBody binds an http.Request body to a struct or map.
 func BindHttpBody(r *http.Request, i interface{}) error {
-	return BindBody(NewHttpBindableRequest(r), i)
+	return GetHttpBinder().BindBody(r, i)
 }
 
-func BindHttpPath(r *http.Request, i interface{}) error {
-	return BindPath(NewHttpBindableRequest(r), i)
+func BindHttpPathParms(r *http.Request, i interface{}) error {
+	return GetHttpBinder().BindPathParams(r, i)
 }
 
-func BindHttpQuery(r *http.Request, i interface{}) error {
-	return BindQuery(NewHttpBindableRequest(r), i)
+func BindHttpQueryParams(r *http.Request, i interface{}) error {
+	return GetHttpBinder().BindQueryParams(r, i)
 }
 
-func BindHttpHeader(r *http.Request, i interface{}) error {
-	return BindHeader(NewHttpBindableRequest(r), i)
+func BindHttpHeaders(r *http.Request, i interface{}) error {
+	return GetHttpBinder().BindHeaders(r, i)
 }
 
-func BindHttpForm(r *http.Request, i interface{}) error {
-	return BindForm(NewHttpBindableRequest(r), i)
+func GetHttpBinder() *HttpBinder {
+	if DefaultHttpBinder == nil {
+		DefaultHttpBinder = NewHttpBinder()
+	}
+	return DefaultHttpBinder
 }
 
-func BindHttpMultipartForm(r *http.Request, i interface{}) error {
-	return BindMultipartForm(NewHttpBindableRequest(r), i)
+type HttpBinder struct {
+	Binder
+}
+
+func NewHttpBinder() *HttpBinder {
+	return &HttpBinder{GetBinder()}
+}
+
+func (b *HttpBinder) Bind(r *http.Request, i interface{}) error {
+	return b.Binder.Bind(NewHttpBindableRequest(r), i)
+}
+
+func (b *HttpBinder) BindBody(r *http.Request, i interface{}) error {
+	return b.Binder.BindBody(NewHttpBindableRequest(r), i)
+}
+
+func (b *HttpBinder) BindPathParams(r *http.Request, i interface{}) error {
+	return b.Binder.BindPathParams(NewHttpBindableRequest(r), i)
+}
+
+func (b *HttpBinder) BindQueryParams(r *http.Request, i interface{}) error {
+	return b.Binder.BindQueryParams(NewHttpBindableRequest(r), i)
+}
+
+func (b *HttpBinder) BindHeaders(r *http.Request, i interface{}) error {
+	return b.Binder.BindHeaders(NewHttpBindableRequest(r), i)
 }

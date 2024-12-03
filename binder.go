@@ -65,6 +65,10 @@ func (DefaultXMLSerializer) Deserialize(r BindableRequest, i interface{}) error 
 
 type Binder interface {
 	Bind(r BindableRequest, i interface{}) error
+	BindBody(r BindableRequest, i interface{}) error
+	BindPathParams(r BindableRequest, i interface{}) error
+	BindQueryParams(r BindableRequest, i interface{}) error
+	BindHeaders(r BindableRequest, i interface{}) error
 }
 
 // BindUnmarshaler is the interface used to wrap the UnmarshalParam method.
@@ -97,25 +101,17 @@ func Bind(r BindableRequest, i interface{}) error {
 }
 
 func BindBody(r BindableRequest, i interface{}) error {
-	return GetBinder().Bind(r, i)
+	return GetBinder().BindBody(r, i)
 }
 
-func BindPath(r BindableRequest, i interface{}) error {
-	return GetBinder().Bind(r, i)
+func BindPathParams(r BindableRequest, i interface{}) error {
+	return GetBinder().BindPathParams(r, i)
 }
 
-func BindQuery(r BindableRequest, i interface{}) error {
-	return GetBinder().Bind(r, i)
+func BindQueryParams(r BindableRequest, i interface{}) error {
+	return GetBinder().BindQueryParams(r, i)
 }
 
-func BindHeader(r BindableRequest, i interface{}) error {
-	return GetBinder().Bind(r, i)
-}
-
-func BindForm(r BindableRequest, i interface{}) error {
-	return GetBinder().Bind(r, i)
-}
-
-func BindMultipartForm(r BindableRequest, i interface{}) error {
-	return GetBinder().Bind(r, i)
+func BindHeaders(r BindableRequest, i interface{}) error {
+	return GetBinder().BindHeaders(r, i)
 }
