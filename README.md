@@ -1,4 +1,3 @@
-
 [![GoDoc](https://godoc.org/github.com/gobigbang/binder?status.svg)](https://godoc.org/github.com/gobigbang/binder)
 [![GitHub release](https://img.shields.io/github/release/gobigbang/binder.svg?v0.0.3)](https://img.shields.io/github/release/gobigbang/binder.svg?v0.0.3)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/gobigbang/binder/master/LICENSE)
@@ -18,8 +17,8 @@ Parsing request data is a crucial part of a web application, this process is usu
 
 This package provides different ways to "bind" request data to go types.
 
-
 # Installation
+
 To install Binder, use go get:
 
 ```go
@@ -37,17 +36,18 @@ type User struct {
   ID string `query:"id"`
 }
 
-// bind this route to something like /user?id=abc
-func(w http.ResponseWriter, r *http.Request) {
-    var user User
-    if err := binder.BindHttp(r, &user); err != nil {
-        http.Error(w, err.Error(), http.StatusBadRequest)
-        return
-    }
-
-    // do something with the user
-}
-
+mux := http.NewServeMux()
+mux.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
+  var user User
+  if err := binder.BindHttp(r, &user); err != nil {
+      http.Error(w, err.Error(), http.StatusBadRequest)
+      return
+  }
+  w.Header().Set("Content-Type", "application/json")
+  w.WriteHeader(http.StatusOK)
+  json.NewEncoder(w).Encode(data)
+})
+log.Fatal(http.ListenAndServe(":8080", mux))
 ```
 
 ### Data Sources
@@ -200,7 +200,6 @@ Each supported type has the following methods:
 - `Must<Type>s("param", &destination)` - (for slices) parameter value is required to exist, binds it to given destination of that type i.e `MustInt64s(...)`.
 
 For certain slice types `BindWithDelimiter("param", &dest, ",")` supports splitting parameter values before type conversion is done. For example binding an integer slice from the URL `/api/search?id=1,2,3&id=1` will result in `[]int64{1,2,3,1}`.
-
 
 ## License
 
