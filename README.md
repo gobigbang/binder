@@ -1,6 +1,6 @@
 
 [![GoDoc](https://godoc.org/github.com/gobigbang/binder?status.svg)](https://godoc.org/github.com/gobigbang/binder)
-[![GitHub release](https://img.shields.io/github/release/gobigbang/binder.svg?v0.0.2)](https://img.shields.io/github/release/gobigbang/binder.svg?v0.0.2)
+[![GitHub release](https://img.shields.io/github/release/gobigbang/binder.svg?v0.0.3)](https://img.shields.io/github/release/gobigbang/binder.svg?v0.0.3)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/gobigbang/binder/master/LICENSE)
 
 # HTTP BINDER
