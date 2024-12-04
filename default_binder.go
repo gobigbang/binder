@@ -17,6 +17,7 @@ type DefaultBinder struct {
 	ArrayMatcher         *regexp.Regexp
 	MapMatcher           *regexp.Regexp
 	ArrayNotationMatcher *regexp.Regexp
+	DeepObjectSeparator  string
 	MaxBodySize          int64
 	MaxArraySize         int
 	HeaderTagName        string
@@ -40,6 +41,7 @@ func NewBinder() *DefaultBinder {
 		FormTagName:          DefaultFormTagName,
 		QueryTagName:         DefaultQueryTagName,
 		ParamTagName:         DefaultParamTagName,
+		DeepObjectSeparator:  DefaultDeepObjectSeparator,
 		BindOrder:            []BindFunc{},
 	}
 
@@ -205,12 +207,18 @@ func (b *DefaultBinder) bindData(destination interface{}, data map[string][]stri
 	}
 
 	// !struct
-	if typ.Kind() != reflect.Struct {
+	if typ.Kind() != reflect.Struct && typ.Kind() != reflect.Ptr {
 		if tag == b.ParamTagName || tag == b.QueryTagName || tag == b.HeaderTagName {
 			// incompatible type, data is probably to be found in the body
 			return nil
 		}
 		return errors.New("binding element must be a struct")
+	}
+
+	// deference struct
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+		val = val.Elem()
 	}
 
 	for i := 0; i < typ.NumField(); i++ { // iterate over all destination fields
@@ -226,7 +234,6 @@ func (b *DefaultBinder) bindData(destination interface{}, data map[string][]stri
 		}
 		structFieldKind := structField.Kind()
 		inputFieldName := typeField.Tag.Get(tag)
-		// valueKind := structField.Type().Kind()
 
 		if typeField.Anonymous && structFieldKind == reflect.Struct && inputFieldName != "" {
 			// if anonymous struct with query/param/form tags, report an error
@@ -258,16 +265,16 @@ func (b *DefaultBinder) bindData(destination interface{}, data map[string][]stri
 		//if the field is a struct, we need to recursively bind data to it
 		if structFieldKind == reflect.Struct {
 			// the data now is only the data that is relevant to the current struct
-			structData := trimData(inputFieldName, data, b.ArrayNotationMatcher)
-			structFiles := trimFileFields(inputFieldName, dataFiles, b.ArrayNotationMatcher)
+			structData := trimData(inputFieldName, data, b.ArrayNotationMatcher, b.DeepObjectSeparator)
+			structFiles := trimFileFields(inputFieldName, dataFiles, b.ArrayNotationMatcher, b.DeepObjectSeparator)
 			if err := b.bindData(structField.Addr().Interface(), structData, tag, structFiles); err != nil {
 				return err
 			}
 			continue
 		} else if structFieldKind == reflect.Map {
 			// the data now is only the data that is relevant to the current field
-			mapData := trimData(inputFieldName, data, b.MapMatcher)
-			mapFiles := trimFileFields(inputFieldName, dataFiles, b.MapMatcher)
+			mapData := trimData(inputFieldName, data, b.MapMatcher, b.DeepObjectSeparator)
+			mapFiles := trimFileFields(inputFieldName, dataFiles, b.MapMatcher, b.DeepObjectSeparator)
 			if err := b.bindData(structField.Addr().Interface(), mapData, tag, mapFiles); err != nil {
 				return err
 			}
@@ -275,8 +282,8 @@ func (b *DefaultBinder) bindData(destination interface{}, data map[string][]stri
 		} else if structFieldKind == reflect.Slice {
 			// the data now is only the data that is relevant to the current field
 
-			sliceData := trimData(inputFieldName, data, b.ArrayMatcher)
-			sliceFiles := trimFileFields(inputFieldName, dataFiles, b.ArrayMatcher)
+			sliceData := trimData(inputFieldName, data, b.ArrayMatcher, b.DeepObjectSeparator)
+			sliceFiles := trimFileFields(inputFieldName, dataFiles, b.ArrayMatcher, b.DeepObjectSeparator)
 			if err := handleArrayValues(structField, structFieldKind, sliceData, sliceFiles, inputFieldName, b.MaxArraySize); err != nil {
 				return err
 			}
@@ -299,6 +306,61 @@ func (b *DefaultBinder) bindData(destination interface{}, data map[string][]stri
 		}
 
 		if !exists {
+
+			if structFieldKind == reflect.Ptr { // if the field is a pointer, we need to check if it is a struct
+
+				elem := typeField.Type.Elem() // get the type of the pointer
+				valueKind := elem.Kind()
+				if valueKind == reflect.Struct {
+					structData := trimData(inputFieldName, data, b.ArrayNotationMatcher, b.DeepObjectSeparator)
+					structFiles := trimFileFields(inputFieldName, dataFiles, b.ArrayNotationMatcher, b.DeepObjectSeparator)
+
+					if len(structData) == 0 && len(structFiles) == 0 { // no data for this field
+						continue
+					}
+
+					if structField.IsNil() {
+						structField.Set(reflect.New(structField.Type().Elem()))
+					}
+
+					// fmt.Println("structFiles", structFiles)
+					if err := b.bindData(structField.Addr().Interface(), structData, tag, structFiles); err != nil {
+						return err
+					}
+					continue
+				} else if valueKind == reflect.Slice {
+					// the data now is only the data that is relevant to the current field
+					sliceData := trimData(inputFieldName, data, b.ArrayMatcher, b.DeepObjectSeparator)
+					sliceFiles := trimFileFields(inputFieldName, dataFiles, b.ArrayMatcher, b.DeepObjectSeparator)
+
+					if len(sliceData) == 0 && len(sliceFiles) == 0 { // no data for this field
+						continue
+					}
+
+					if structField.IsNil() {
+						structField.Set(reflect.New(structField.Type().Elem()))
+					}
+
+					if err := handleArrayValues(structField, structFieldKind, sliceData, sliceFiles, inputFieldName, b.MaxArraySize); err != nil {
+						return err
+					}
+				} else if valueKind == reflect.Map {
+					// the data now is only the data that is relevant to the current field
+					mapData := trimData(inputFieldName, data, b.MapMatcher, b.DeepObjectSeparator)
+					mapFiles := trimFileFields(inputFieldName, dataFiles, b.MapMatcher, b.DeepObjectSeparator)
+
+					if len(mapData) == 0 && len(mapFiles) == 0 { // no data for this field
+						continue
+					}
+					if structField.IsNil() {
+						structField.Set(reflect.New(structField.Type().Elem()))
+					}
+
+					if err := b.bindData(structField.Interface(), mapData, tag, mapFiles); err != nil {
+						return err
+					}
+				}
+			}
 			continue
 		}
 

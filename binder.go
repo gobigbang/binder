@@ -12,16 +12,17 @@ import (
 	"regexp"
 )
 
-var ArrayMatcherRegexp = regexp.MustCompile(`\[([0-9]+)\]`)
-var MapMatcherRegexp = regexp.MustCompile(`\[([a-zA-Z0-9\-\_\.]+)\]`)
-var ArrayNotationRegexp = regexp.MustCompile(`\[([a-zA-Z0-9\-\_\.]+)\]`)
-var PathMatcherRegexp = regexp.MustCompile(`\{([^}]+)\}`)
-var DefaultBodySize = int64(32 << 20) // 32 MB
-var DefaultHeaderTagName = "header"
-var DefaultFormTagName = "form"
-var DefaultQueryTagName = "query"
-var DefaultParamTagName = "param"
-var MaxArraySize = 1000 // max size of array
+var ArrayMatcherRegexp = regexp.MustCompile(`\[([0-9]+)\]`)              // matches [0] to use in indexed arrays
+var MapMatcherRegexp = regexp.MustCompile(`\[([a-zA-Z0-9\-\_\.]+)\]`)    // matches [key] to use in maps and deep objects
+var ArrayNotationRegexp = regexp.MustCompile(`\[([a-zA-Z0-9\-\_\.]+)\]`) // matches [id] to use in deep objects
+var PathMatcherRegexp = regexp.MustCompile(`\{([^}]+)\}`)                // matches {id} to use in path parameters
+var DefaultDeepObjectSeparator = "."                                     // default separator for deep fields
+var DefaultBodySize = int64(32 << 20)                                    // 32 MB
+var DefaultHeaderTagName = "header"                                      // default tag name for header
+var DefaultFormTagName = "form"                                          // default tag name for form
+var DefaultQueryTagName = "query"                                        // default tag name for query
+var DefaultParamTagName = "param"                                        // default tag name for param
+var MaxArraySize = 1000                                                  // max size of array
 
 // JSONSerializer is the interface that encodes and decodes JSON to and from interfaces.
 type JSONSerializer interface {

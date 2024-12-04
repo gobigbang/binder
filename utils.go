@@ -12,17 +12,26 @@ import (
 )
 
 // getPrefixedFieldNames returns a map of field names that are prefixed with the given prefix.
-func getPrefixedFieldNames(prefix string, keys []string, matcher *regexp.Regexp) map[string]string {
+func getPrefixedFieldNames(prefix string, keys []string, matcher *regexp.Regexp, deepSeparator string) map[string]string {
 	result := map[string]string{}
 	for _, k := range keys {
 		if strings.HasPrefix(k, prefix) {
-			if strings.HasPrefix(k, prefix+".") {
-				result[k] = strings.TrimPrefix(k, prefix+".") // dot notation
-			} else if matches := matcher.FindStringSubmatch(k); len(matches) > 0 {
-				if len(matches) <= 1 {
+			if strings.HasPrefix(k, prefix+deepSeparator) {
+				result[k] = strings.TrimPrefix(k, prefix+deepSeparator) // dot notation
+			} else if matches := matcher.FindAllStringSubmatch(k, -1); len(matches) > 0 {
+				if len(matches) == 0 {
 					continue
 				}
-				result[k] = matches[1] // array notation
+				finalValue := []string{}
+				// convert all the matches to dot notation (it should be faster than using check for each match)
+				for _, match := range matches {
+					val := match[1]
+					if val == "" {
+						break
+					}
+					finalValue = append(finalValue, val)
+				}
+				result[k] = strings.Join(finalValue, deepSeparator)
 			}
 		}
 	}
@@ -30,13 +39,13 @@ func getPrefixedFieldNames(prefix string, keys []string, matcher *regexp.Regexp)
 }
 
 // trimData trims the data map to only include keys that start with the given prefix.
-func trimData(prefix string, data map[string][]string, matcher *regexp.Regexp) map[string][]string {
+func trimData(prefix string, data map[string][]string, matcher *regexp.Regexp, deepSeparator string) map[string][]string {
 	result := map[string][]string{}
 	keys := []string{}
 	for key := range data {
 		keys = append(keys, key)
 	}
-	fieldNames := getPrefixedFieldNames(prefix, keys, matcher)
+	fieldNames := getPrefixedFieldNames(prefix, keys, matcher, deepSeparator)
 	for k, v := range fieldNames {
 		result[v] = data[k]
 	}
@@ -44,13 +53,13 @@ func trimData(prefix string, data map[string][]string, matcher *regexp.Regexp) m
 }
 
 // trimFileFields trims the files map to only include keys that start with the given prefix.
-func trimFileFields(prefix string, files map[string][]*multipart.FileHeader, matcher *regexp.Regexp) map[string][]*multipart.FileHeader {
+func trimFileFields(prefix string, files map[string][]*multipart.FileHeader, matcher *regexp.Regexp, deepSeparator string) map[string][]*multipart.FileHeader {
 	result := map[string][]*multipart.FileHeader{}
 	keys := []string{}
 	for key := range files {
 		keys = append(keys, key)
 	}
-	fieldNames := getPrefixedFieldNames(prefix, keys, matcher)
+	fieldNames := getPrefixedFieldNames(prefix, keys, matcher, deepSeparator)
 	for k, v := range fieldNames {
 		result[v] = files[k]
 	}
